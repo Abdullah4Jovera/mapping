@@ -2,12 +2,140 @@
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
-const Lead = require('../models/leadModel'); 
+const Lead = require('../models/leadModel');  
 const { isAuth, hasRole } = require('../utils');
-const Client = require('../models/clientModel');
-const bcrypt = require('bcrypt');
+const Client = require('../models/clientModel'); 
+const bcrypt = require('bcrypt'); 
 const User = require('../models/userModel');
 const ProductStage = require('../models/productStageModel');
+const leadDiscussionModel = require('../models/leadDiscussionModel');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const File = require('../models/fileModel');
+// Set storage engine
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, '../lead_files').replace(/\\/g, '/');
+        // Check if the directory exists, if not, create it
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); // Set unique filename with timestamp
+    }
+});
+
+// Initialize upload middleware
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 1000000 }, // 1MB file limit
+    fileFilter: function (req, file, cb) {
+        checkFileType(file, cb);
+    }
+}).single('file');
+
+// Check file type function
+function checkFileType(file, cb) {
+    const filetypes = /jpeg|jpg|png|pdf|doc|docx/; // Allowed file extensions
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+        return cb(null, true);
+    } else {
+        cb('Error: Files of this type are not allowed!');
+    }
+}
+
+// Route to handle file upload and link to the lead
+router.post('/upload-file/:leadId', isAuth, (req, res) => {
+    upload(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ message: 'Error uploading file', error: err });
+        }
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        try {
+            const leadId = req.params.leadId;
+            const lead = await Lead.findById(leadId);
+
+            if (!lead) {
+                return res.status(404).json({ message: 'Lead not found' });
+            }
+
+            // Create a new file document
+            const newFile = new File({
+                file_name: req.file.filename,
+                file_path: req.file.path.replace(/\\/g, '/'),
+                created_at: new Date(),
+                updated_at: new Date()
+            });
+
+            // Save the file document
+            await newFile.save();
+
+            // Push the file reference to the lead's files array
+            lead.files.push(newFile._id);
+            await lead.save();
+
+            res.status(201).json({
+                message: 'File uploaded and associated with lead successfully',
+                file: newFile
+            });
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            res.status(500).json({ message: 'Error uploading file' });
+        }
+    });
+});
+
+/// Add Discussion in the lead Model  
+router.post('/add-discussion/:leadId', isAuth, async (req, res) => {
+    try {
+        const { leadId } = req.params;
+        const { comment } = req.body;
+
+        // Check if comment is provided
+        if (!comment) {
+            return res.status(400).json({ message: 'Comment is required' });
+        }
+
+        // Find the lead by ID
+        const lead = await Lead.findById(leadId);
+        if (!lead) {
+            return res.status(404).json({ message: 'Lead not found' });
+        }
+
+        // Create a new discussion
+        const newDiscussion = new leadDiscussionModel({
+            created_by: req.user._id,
+            comment
+        });
+
+        // Save the new discussion
+        await newDiscussion.save();
+
+        // Add the discussion to the lead's discussions array
+        lead.discussions.push(newDiscussion._id);
+        await lead.save();
+
+        res.status(201).json({
+            message: 'Discussion added successfully',
+            discussion: newDiscussion
+        });
+    } catch (error) {
+        console.error('Error adding discussion:', error);
+        res.status(500).json({ message: 'Error adding discussion' });
+    }
+});
+
+
 
 /// Transfer Lead 
 router.put('/transfer-lead/:id', isAuth, async (req, res) => {
@@ -104,8 +232,6 @@ router.put('/transfer-lead/:id', isAuth, async (req, res) => {
         res.status(500).json({ message: 'Error transferring lead' });
     }
 });
-
-
 // New route to move lead (Update pipeline, branch, product_stage)
 router.put('/move-lead/:id', isAuth, async (req, res) => {
     try {
@@ -193,7 +319,6 @@ router.put('/move-lead/:id', isAuth, async (req, res) => {
     }
 });
 
-
 // router.get('/', isAuth, async (req, res) => {
 //     try {
 //         const userId = req.user._id; // Extract the authenticated user's ID
@@ -264,7 +389,6 @@ router.get('/single-lead/:id' , async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 });
-
 
 // Update product_stage of a lead
 router.put('/update-product-stage/:leadId', isAuth, async (req, res) => {
@@ -438,8 +562,6 @@ router.put('/edit-lead/:id', isAuth, async (req, res) => {
     }
 });
 
-
-
 router.get('/get-leads', isAuth, async (req, res) => { 
     try {
         const userId = req.user._id;
@@ -470,8 +592,11 @@ router.get('/get-leads', isAuth, async (req, res) => {
         const leads = await Lead.find({ selected_users: userId })
             .populate('branch', 'name')
             .populate('pipeline_id', 'name')
+          
+
             .populate('stage', 'name')
             .populate('lead_type', 'name')
+            .populate('discussions', 'comment')
             .populate({
                 path: 'source',
                 populate: {
@@ -535,8 +660,6 @@ router.get('/get-leads', isAuth, async (req, res) => {
         res.status(500).json({ message: 'Error fetching leads' });
     }
 });
-
-
 // Route to create a new lead
 router.post('/create-lead', isAuth, async (req, res) => {
     try {

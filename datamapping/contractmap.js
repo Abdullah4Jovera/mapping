@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
-const Deal = require('../models/dealModel');
+
 const User = require('../models/userModel');
 const Client = require('../models/clientModel');
 const Lead = require('../models/leadModel');
@@ -13,6 +13,8 @@ const Source = require('../models/sourceModel');
 const LeadType = require('../models/leadTypeModel');
 const Product = require('../models/productModel'); 
 const DealStage = require('../models/dealStageModel');
+const contractModel = require('../models/contractModel');
+
 
 // Initialize Express app
 const app = express();
@@ -20,8 +22,8 @@ const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/newwithdeal', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true
 });
 
 // Load JSON file helper
@@ -325,9 +327,9 @@ const loadDeals = async () => {
                 const dealStageId = dealStagesMap.get(lead.deal_stage) || null;
                 const isTransfer = deal.contract_stage === 'cm_signed';
 
-                // Skip deal if isTransfer is false
-                if (!isTransfer) {
-                    console.log(`Skipping deal ID ${deal.id} as it is not marked as transfer.`);
+                // Skip deal if isTransfer is true
+                if (isTransfer) {
+                    console.log(`Skipping deal ID ${deal.id} as it is marked as transfer.`);
                     continue;
                 }
 
@@ -360,7 +362,7 @@ const loadDeals = async () => {
                     created_by: userId,
                     is_active: deal.is_active === '1',
                     lead_id: leadId,
-                    deal_stage: dealStageId,
+                    // deal_stage: dealStageId,
                     selected_users: selectedUsers,
                     date: new Date(deal.date),
                     created_at: new Date(deal.created_at),
@@ -369,7 +371,7 @@ const loadDeals = async () => {
                 };
 
                 // Insert the Deal into MongoDB
-                const newDeal = await Deal.create(transformedDeal);
+                const newDeal = await contractModel.create(transformedDeal);
 
                 // Handle Service Commissions
                 const serviceCommissionData = serviceCommissionsData.find(sc => sc.deal_id === deal.id);
@@ -407,7 +409,7 @@ const loadDeals = async () => {
                     const newServiceCommission = await ServiceCommission.create(serviceCommissionPayload);
 
                     // Push Service Commission ID into the Deal
-                    await Deal.findByIdAndUpdate(newDeal._id, {
+                    await contractModel.findByIdAndUpdate(newDeal._id, {
                         service_commission_id: newServiceCommission._id,
                     });
                 } else {
@@ -424,7 +426,7 @@ const loadDeals = async () => {
                 }
 
                 // Update the Deal with activity logs
-                await Deal.findByIdAndUpdate(newDeal._id, { activity_logs: activityLogIds });
+                await contractModel.findByIdAndUpdate(newDeal._id, { activity_logs: activityLogIds });
 
                 console.log(`Successfully processed deal ID ${deal.id}.`);
             } catch (dealError) {

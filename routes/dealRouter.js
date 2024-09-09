@@ -15,20 +15,8 @@ router.get('/get-deals', async (req, res) => {
       .populate('deal_stage', 'name') // Populate creator details
       .populate('source_id', 'name') // Populate creator details
       .populate('products', 'name') // Populate creator details
-
-
-
-
-
-
-    // Check if lead_id and activity_logs are populated
-    deals.forEach(deal => {
-      if (!deal.lead_id) {
-        console.warn('Lead not found for deal:', deal._id);
-      } else if (!deal.lead_id.activity_logs) {
-        console.warn('Activity logs not found for lead:', deal.lead_id._id);
-      }
-    });
+      .populate('service_commission_id') // Populate creator details
+      .populate('activity_logs') // Populate creator details
 
     res.status(200).json(deals);
   } catch (error) {

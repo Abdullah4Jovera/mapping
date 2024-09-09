@@ -1,12 +1,15 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const User = require('./userModel');
-const DealActivityLog = require('./dealActivityLogModel');
+// const ContractActivityLog = require('./contractActivityLogModel'); // Assuming you have this model
 const Pipeline = require('./pipelineModel');
-const DealStage = require('../models/dealStageModel');
+// const ContractStage = require('../models/contractStageModel'); // Adjust path as needed
 const LeadType = require('../models/leadTypeModel');
-const ServiceCommission = require ('../models/serviceCommissionModel.js')
-const dealSchema = new Schema({
+const ServiceCommission = require ('../models/serviceCommissionModel.js');
+const Source = require('../models/sourceModel'); // Adjust path as needed
+const Product = require('../models/productModel'); // Adjust path as needed
+
+const contractSchema = new Schema({
     is_transfer: {
         type: Boolean,
         default: false
@@ -15,7 +18,7 @@ const dealSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Client',
         required: true
-    }, 
+    },
     lead_type: {
         type: Schema.Types.ObjectId,
         ref: 'LeadType',
@@ -26,33 +29,27 @@ const dealSchema = new Schema({
         ref: 'Pipeline',
         required: true
     },
-   
     source_id: {
         type: Schema.Types.ObjectId,
         ref: 'Source',
         required: true
     },
-    products: {
+    products: [{
         type: Schema.Types.ObjectId,
-        ref: 'Product', 
+        ref: 'Product',
         required: true
-    },
+    }],
     contract_stage: {
         type: String,
-        required: true
-    },
-    deal_stage: {
-        type: Schema.Types.ObjectId,
-        ref: 'DealStage',
-        required: false
+        default: 'New'
     },
     labels: [{
-        type: String, // Changed to String
+        type: String,
         default: null
     }],
     status: {
         type: String,
-        enum: ['Active', 'Inactive'], // Adjust based on possible values
+        enum: ['Active', 'Inactive'],
         required: true
     },
     created_by: {
@@ -63,12 +60,11 @@ const dealSchema = new Schema({
     lead_id: {
         type: Schema.Types.ObjectId,
         ref: 'Lead',
-
     },
     selected_users: [{
         type: Schema.Types.ObjectId,
         ref: 'User',
-        required: true 
+        required: true
     }],
     is_active: {
         type: Boolean,
@@ -77,12 +73,11 @@ const dealSchema = new Schema({
     service_commission_id: {
         type: Schema.Types.ObjectId,
         ref: 'ServiceCommission',
-
     },
-    activity_logs: [{
-        type: Schema.Types.ObjectId,
-        ref: 'DealActivityLog'
-    }],
+    // activity_logs: [{
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'ContractActivityLog'
+    // }],
     date: {
         type: Date,
         required: true
@@ -95,16 +90,18 @@ const dealSchema = new Schema({
         type: Date,
         default: Date.now
     },
-    delstatus: { type: Boolean, default: false },
-
+    delstatus: { 
+        type: Boolean, 
+        default: false 
+    },
 });
 
 // Update timestamps before saving
-dealSchema.pre('save', function (next) {
+contractSchema.pre('save', function (next) {
     if (this.isModified()) {
         this.updated_at = Date.now();
     }
     next();
 });
 
-module.exports = mongoose.model('Deal', dealSchema);
+module.exports = mongoose.model('Contract', contractSchema);

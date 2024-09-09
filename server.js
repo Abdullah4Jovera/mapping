@@ -13,6 +13,7 @@ const productstageRouter = require('./routes/productStageRouter')
 const productsRouter = require('./routes/productRouter')
 const leadtypesRouter = require('./routes/leadTypeRouter')
 const dealstagesRouter = require('./routes/dealStageRouter')
+const contractRouter = require('./routes/contractRouter')
 require('dotenv').config();
 
 const path = require('path');
@@ -44,6 +45,7 @@ app.use('/api/productstages', productstageRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/leadtypes', leadtypesRouter);
 app.use('/api/dealstages', dealstagesRouter);
+app.use('/api/contracts', contractRouter);
 
 
 

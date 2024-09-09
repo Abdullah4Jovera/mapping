@@ -14,7 +14,7 @@ const dealActivityLogSchema = new Schema({
         required: true
     },
     log_type: {
-        type: String,
+        type: String, 
         required: true
     },
     remark: {
