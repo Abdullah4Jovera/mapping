@@ -14,7 +14,7 @@ const Source = require('../models/sourceModel');
 const Product = require('../models/productModel');
 const ProductStage = require('../models/productStageModel');
 
-mongoose.connect('mongodb://localhost:27017/newwithdeal', { 
+mongoose.connect('mongodb://localhost:27017/transfer', { 
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => console.log('MongoDB connected'))
@@ -427,10 +427,12 @@ const insertLeads = async () => {
       }
 
         // Handle boolean fields based on the lead data
-      const isActive = lead.is_active === 1 ? true : false;
-      const isConverted = lead.is_converted === 1 ? true : false;
-      const isReject = lead.is_reject === 1 ? true : false; 
+      const isActive = lead.is_active === "1" ? true : false;
+      const isTransfer = lead.is_transfer === "1" ? true : false;
+      const isConverted = !!lead.is_converted;
+      const isReject = lead.is_reject === "1" ? true : false;  
       const newLead = new Lead({
+        is_transfer: isTransfer,
         client: clientId,
         pipeline_id: PipelineId,
         description,

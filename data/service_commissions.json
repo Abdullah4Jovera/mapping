@@ -43,7 +43,7 @@
         "a_commission": "0",
         "created_at": "2024-07-27 13:46:33",
         "updated_at": "2024-07-27 13:46:33"
-    },
+    }, 
     {
         "id": "779",
         "deal_id": "347",
@@ -189,7 +189,7 @@
         "without_vat_commission": "3810",
         "hodsale": "35",
         "hodsalecommission": "250",
-        "salemanager": "30012",
+        "salemanager": "30012", 
         "salemanagercommission": "1500",
         "coordinator": null,
         "coordinator_commission": "0",

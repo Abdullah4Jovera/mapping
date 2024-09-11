@@ -13,6 +13,162 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const File = require('../models/fileModel');
+const serviceCommissionModel = require('../models/serviceCommissionModel');
+const Contract = require('../models/contractModel')
+
+router.post('/convert-lead-to-contract/:leadId', isAuth, async (req, res) => {
+    try {
+        const { leadId } = req.params;
+
+        const {
+            finance_amount,
+            bank_commission,
+            customer_commission,
+            with_vat_commission,
+            without_vat_commission,
+            hodsale,
+            hodsalecommission,
+            salemanager,
+            salemanagercommission,
+            coordinator,
+            coordinator_commission,
+            team_leader,
+            team_leader_commission,
+            salesagent,
+            salesagent_commission,
+            team_leader_one,
+            team_leader_one_commission,
+            sale_agent_one,
+            sale_agent_one_commission,
+            salemanagerref,
+            salemanagerrefcommission,
+            agentref,
+            agent_commission,
+            ts_hod,
+            ts_hod_commision,
+            ts_team_leader,
+            ts_team_leader_commission,
+            tsagent,
+            tsagent_commission,
+            marketingmanager,
+            marketingmanagercommission,
+            marketingagent,
+            marketingagentcommission,
+            other_name,
+            other_name_commission,
+            broker_name,
+            broker_name_commission,
+            alondra,
+            a_commission
+        } = req.body;
+
+        // Helper function to validate and convert strings to ObjectIds
+        const convertToObjectId = id => {
+            if (id && mongoose.isValidObjectId(id)) {
+                return new mongoose.Types.ObjectId(id);
+            } else {
+                return null;  // Or handle the invalid case as needed
+            }
+        };
+
+        // Find the lead
+        const lead = await Lead.findById(leadId)
+            .populate('client')  // Populate client data
+            .populate('products'); // Populate product data
+
+        if (!lead) {
+            return res.status(404).json({ message: 'Lead not found' });
+        }
+
+        // Create a new ServiceCommission based on the request body
+        const newServiceCommission = new serviceCommissionModel({
+            contract_id: null,  // We'll set this after creating the contract
+            finance_amount,
+            bank_commission,
+            customer_commission,
+            with_vat_commission,
+            without_vat_commission,
+            hodsale: convertToObjectId(hodsale),
+            hodsalecommission,
+            salemanager: convertToObjectId(salemanager),
+            salemanagercommission,
+            coordinator: convertToObjectId(coordinator),
+            coordinator_commission,
+            team_leader: convertToObjectId(team_leader),
+            team_leader_commission,
+            salesagent: convertToObjectId(salesagent),
+            salesagent_commission,
+            team_leader_one: convertToObjectId(team_leader_one),
+            team_leader_one_commission,
+            sale_agent_one: convertToObjectId(sale_agent_one),
+            sale_agent_one_commission,
+            salemanagerref: convertToObjectId(salemanagerref),
+            salemanagerrefcommission,
+            agentref: convertToObjectId(agentref),
+            agent_commission,
+            ts_hod: convertToObjectId(ts_hod),
+            ts_hod_commision,
+            ts_team_leader: convertToObjectId(ts_team_leader),
+            ts_team_leader_commission,
+            tsagent: convertToObjectId(tsagent),
+            tsagent_commission,
+            marketingmanager: convertToObjectId(marketingmanager),
+            marketingmanagercommission,
+            marketingagent: convertToObjectId(marketingagent),
+            marketingagentcommission,
+            other_name: convertToObjectId(other_name),
+            other_name_commission,
+            broker_name,
+            broker_name_commission,
+            alondra,
+            a_commission
+        });
+
+        // Save the ServiceCommission to the database
+        await newServiceCommission.save();
+
+        // Handle products based on type
+        const productIds = Array.isArray(lead.products) 
+            ? lead.products.map(product => product._id) 
+            : [lead.products];  // Convert to array if it's a single ObjectId
+
+        // Create the new contract
+        const newContract = new Contract({
+            client_id: lead.client._id,
+            lead_type: lead.lead_type,
+            pipeline_id: lead.pipeline_id,
+            source_id: lead.source,
+            products: productIds,  // Ensure only product ObjectIds
+            contract_stage: 'New',
+            status: 'Active',
+            is_transfer: false,
+            labels: lead.labels,
+            created_by: req.user._id,
+            lead_id: lead._id,
+            selected_users: lead.selected_users,
+            service_commission_id: newServiceCommission._id,
+            date: new Date(),
+        });
+
+        // Save the new contract to the database
+        await newContract.save();
+
+        // Update the ServiceCommission with the new contract ID
+        newServiceCommission.contract_id = newContract._id;
+        await newServiceCommission.save();
+
+        // After successfully creating the contract, mark the lead as converted
+        await Lead.findByIdAndUpdate(leadId, { is_converted: true });
+
+        res.status(201).json({ message: 'Contract created and lead converted successfully', contract: newContract });
+    } catch (error) {
+        console.error('Error converting lead to contract:', error);
+        res.status(500).json({ message: 'Failed to convert lead to contract' });
+    }
+});
+
+
+
 // Set storage engine
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -135,7 +291,7 @@ router.post('/add-discussion/:leadId', isAuth, async (req, res) => {
     }
 });
 
-
+ 
 
 /// Transfer Lead 
 router.put('/transfer-lead/:id', isAuth, async (req, res) => {
@@ -349,11 +505,11 @@ router.get('/single-lead/:id' , async (req, res) => {
             })
             .populate({
                 path: 'created_by',
-                select: 'name'
+                select: 'name role'
             })
             .populate({
                 path: 'selected_users',
-                select: 'name'
+                select: 'name role'
             })
             .populate({
                 path: 'pipeline_id',
@@ -589,7 +745,7 @@ router.get('/get-leads', isAuth, async (req, res) => {
         // }
 
         // Fetch leads with the built query
-        const leads = await Lead.find({ selected_users: userId })
+        const leads = await Lead.find({ selected_users: userId , is_converted : false , is_reject: false})
             .populate('branch', 'name')
             .populate('pipeline_id', 'name')
           

@@ -14,6 +14,10 @@ const contractSchema = new Schema({
         type: Boolean,
         default: false
     },
+    is_converted: {
+        type: Boolean,
+        default: false
+    },
     client_id: {
         type: Schema.Types.ObjectId,
         ref: 'Client',
@@ -96,12 +100,12 @@ const contractSchema = new Schema({
     },
 });
 
-// Update timestamps before saving
-contractSchema.pre('save', function (next) {
-    if (this.isModified()) {
-        this.updated_at = Date.now();
-    }
-    next();
-});
+// // Update timestamps before saving
+// contractSchema.pre('save', function (next) {
+//     if (this.isModified()) {
+//         this.updated_at = Date.now();
+//     }
+//     next();
+// });
 
 module.exports = mongoose.model('Contract', contractSchema);

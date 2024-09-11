@@ -431,7 +431,7 @@ const loadDeals = async () => {
                 console.log(`Successfully processed deal ID ${deal.id}.`);
             } catch (dealError) {
                 console.error(`Error processing deal ID ${deal.id}:`, dealError);
-            }
+            } 
         }
 
         console.log('All deals have been processed.');

@@ -34,6 +34,7 @@ const LeadSchema = new Schema({
   is_active: { type: Boolean, default: true },
   is_converted: { type: Boolean, default: false },
   is_reject: { type: Boolean, default: false },
+  is_transfer: { type: Boolean, default: false },
   date: { type: Date, default: Date.now },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },

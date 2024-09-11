@@ -13320,11 +13320,11 @@
         "updated_at": "2024-05-13 15:16:39"
     },
     {
-        "id": "18488",
+        "id": "18488", 
         "is_transfer": "1",
         "client_id": "11326",
         "pipeline_id": "4",
-        "lead_type": "3",
+        "lead_type": "3", 
         "stage_id": "21",
         "is_reject": "1",
         "sources": "18",
@@ -16757,7 +16757,7 @@
         "client_id": "4038",
         "pipeline_id": "9",
         "lead_type": "2",
-        "stage_id": "53",
+        "stage_id": "53", 
         "is_reject": null,
         "sources": "2",
         "products": "3",

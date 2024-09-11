@@ -7,10 +7,10 @@ const DealStage = require('../models/dealStageModel');
 const LeadType = require('../models/leadTypeModel');
 const ServiceCommission = require ('../models/serviceCommissionModel.js')
 const dealSchema = new Schema({
-    is_transfer: {
-        type: Boolean,
-        default: false
-    },
+    // is_transfer: {
+    //     type: Boolean,
+    //     default: false
+    // },
     client_id: {
         type: Schema.Types.ObjectId,
         ref: 'Client',
@@ -65,6 +65,11 @@ const dealSchema = new Schema({
         ref: 'Lead',
 
     },
+    contract_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'Contract',
+
+    },
     selected_users: [{
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -99,12 +104,12 @@ const dealSchema = new Schema({
 
 });
 
-// Update timestamps before saving
-dealSchema.pre('save', function (next) {
-    if (this.isModified()) {
-        this.updated_at = Date.now();
-    }
-    next();
-});
+// // Update timestamps before saving
+// dealSchema.pre('save', function (next) {
+//     if (this.isModified()) {
+//         this.updated_at = Date.now();
+//     }
+//     next();
+// });
 
 module.exports = mongoose.model('Deal', dealSchema);

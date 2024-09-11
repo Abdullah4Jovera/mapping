@@ -14,6 +14,7 @@ const productsRouter = require('./routes/productRouter')
 const leadtypesRouter = require('./routes/leadTypeRouter')
 const dealstagesRouter = require('./routes/dealStageRouter')
 const contractRouter = require('./routes/contractRouter')
+const servicecommissionRouter = require('./routes/serviceCommissionRouter')
 require('dotenv').config();
 
 const path = require('path');
@@ -21,7 +22,7 @@ const app = express();
 const port = 2000;
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/newwithdeal', {
+mongoose.connect('mongodb://localhost:27017/transfer', {
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.log('Error connecting to MongoDB:', err));
 
@@ -46,6 +47,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/leadtypes', leadtypesRouter);
 app.use('/api/dealstages', dealstagesRouter);
 app.use('/api/contracts', contractRouter);
+app.use('/api/service-commission', servicecommissionRouter);
 
 
 

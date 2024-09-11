@@ -6,10 +6,10 @@ const Deal = require('./dealModel');
 const User = require('./userModel');
 
 const serviceCommissionSchema = new Schema({
-    deal_id: {
+    contract_id: {
         type: Schema.Types.ObjectId,
-        ref: 'Deal',
-        required: true
+        ref: 'Contract',
+        required: false
     },
     finance_amount: {
         type: Number,
@@ -123,8 +123,16 @@ const serviceCommissionSchema = new Schema({
         default: null
     },
     tsagent_commission: {
-        type: Number,
+        type: Number, 
         default: "0"
+    },
+    it_team_commission: {
+        type: Number,
+        default: 0,
+    },
+    marketing_team_commission: {
+        type: Number,
+        default: 0,
     },
     marketingmanager: {
         type: Schema.Types.ObjectId,
@@ -135,17 +143,18 @@ const serviceCommissionSchema = new Schema({
         type: Number,
         default: "0"
     },
-    marketingagent: {
+    marketing_team_leader: {
         type: Schema.Types.ObjectId,
         ref: 'User',
         default: null
     },
-    marketingagentcommission: {
+    marketing_team_leader_commission: {
         type: Number,
         default: "0"
     },
     other_name: {
-        type: Number,
+        type: Schema.Types.ObjectId,
+        ref: 'User',
         default: null
     },
     other_name_commission: {
@@ -153,7 +162,7 @@ const serviceCommissionSchema = new Schema({
         default: "0"
     },
     broker_name: {
-        type: Number,
+        type: String,
         default: null
     },
     broker_name_commission: {

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Branch = require('../models/branchModel');
-mongoose.connect('mongodb://localhost:27017/productbase', { 
+mongoose.connect('mongodb://localhost:27017/transfer', { 
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
